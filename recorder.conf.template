@@ -9,6 +9,12 @@
 # USBドライブの例: SAVE_DIR_ROOT="/Volumes/MyUSB/Recordings"
 SAVE_DIR_ROOT=""
 
+# [プレビュー設定]
+# プレビューウィンドウのサイズ（幅x高さ）
+# FHD(1920x1080)を左右に並べる場合: 960x540 程度
+PREVIEW_WIDTH=640
+PREVIEW_HEIGHT=360
+
 # [カメラ1]
 CAM1_NAME="cam1"
 # RTSP URLの設定

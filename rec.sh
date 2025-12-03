@@ -61,21 +61,39 @@ cleanup() {
 trap cleanup SIGINT
 
 # --- 録画・プレビュー実行関数 ---
+# ウィンドウ位置カウンター
+WINDOW_INDEX=0
+
 start_recording() {
     local URL=$1
     local NAME=$2
+    local WIN_IDX=$WINDOW_INDEX
+    ((WINDOW_INDEX++))
+
     # .mp4 は強制終了時にファイルが壊れやすいため、.mkv (Matroska) を使用
     local FILE_NAME="${START_TIME}_${NAME}.mkv"
     local FILE_PATH="${OUT_DIR}/${FILE_NAME}"
     # FIFOは /tmp に作成（USBドライブなどFIFO非対応のファイルシステム対策）
     local FIFO_PATH="/tmp/${START_TIME}_${NAME}_preview.fifo"
 
+    # プレビューサイズ（設定ファイルから、未設定時はデフォルト値）
+    local P_WIDTH="${PREVIEW_WIDTH:-640}"
+    local P_HEIGHT="${PREVIEW_HEIGHT:-360}"
+
+    # ウィンドウ位置を計算（2x2グリッド配置）
+    # 0→左上, 1→右上, 2→左下, 3→右下
+    local WIN_LEFT=$(( (WIN_IDX % 2) * P_WIDTH ))
+    local WIN_TOP=$(( (WIN_IDX / 2) * P_HEIGHT ))
+
     # 名前付きパイプを作成（プレビュー用）
     mkfifo "$FIFO_PATH"
 
     # ffplayをバックグラウンドで起動（FIFOから読み取り）
     # FIFOからの読み取りが失敗しても録画に影響しない
-    ffplay -window_title "Live: ${NAME}" -x 640 -y 360 -i "$FIFO_PATH" >/dev/null 2>&1 &
+    ffplay -window_title "Live: ${NAME}" \
+        -x "$P_WIDTH" -y "$P_HEIGHT" \
+        -left "$WIN_LEFT" -top "$WIN_TOP" \
+        -i "$FIFO_PATH" >/dev/null 2>&1 &
 
     # FFmpegコマンド解説
     # -rtsp_transport tcp : 映像乱れ防止
